@@ -1,0 +1,126 @@
+image: gitpod/workspace-python-3.9
+
+# Tasks to run on workspace start
+tasks:
+  - name: Setup Environment
+    init: |
+      # Update system packages
+      sudo apt-get update
+      
+      # Install system dependencies
+      sudo apt-get install -y \
+          ffmpeg \
+          portaudio19-dev \
+          libsndfile1 \
+          libgl1-mesa-glx \
+          libglib2.0-0 \
+          libsm6 \
+          libxext6 \
+          libxrender-dev \
+          libgstreamer1.0-0 \
+          gstreamer1.0-plugins-base \
+          gstreamer1.0-plugins-good \
+          gstreamer1.0-plugins-bad \
+          gstreamer1.0-plugins-ugly \
+          gstreamer1.0-libav \
+          gstreamer1.0-doc \
+          gstreamer1.0-tools \
+          libgstreamer-plugins-base1.0-dev \
+          libavcodec-dev \
+          libavformat-dev \
+          libswscale-dev \
+          libv4l-dev \
+          libxvidcore-dev \
+          libx264-dev \
+          libjpeg-dev \
+          libpng-dev \
+          libtiff-dev \
+          gfortran \
+          openexr \
+          libatlas-base-dev \
+          libtbb2 \
+          libtbb-dev \
+          libdc1394-22-dev \
+          libopenexr-dev \
+          libgstreamer-plugins-base1.0-dev \
+          libavutil-dev \
+          libpostproc-dev \
+          libeigen3-dev \
+          libtesseract-dev \
+          libleptonica-dev
+      
+      # Create necessary directories
+      mkdir -p recordings voice_profiles thumbnails personality_data ar_recordings objects config
+      
+      # Upgrade pip and install Python dependencies
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+      
+      # Install additional AI packages
+      pip install mediapipe opencv-python-headless
+      pip install "opencv-python==4.8.1.78"
+      pip install rembg
+      pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      
+      # Download test resources
+      wget -O test_video.mp4 https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4
+      wget -O test_audio.wav https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3
+      
+      echo "✅ Environment setup complete!"
+    
+    command: echo "🚀 TI Video Creator is ready!"
+
+  - name: Start Streamlit App
+    command: |
+      # Set environment variables
+      export PYTHONPATH="$PYTHONPATH:/workspace/TI-video"
+      export DISPLAY=:99
+      
+      # Start virtual display for GUI (for OpenCV)
+      /usr/bin/Xvfb :99 -screen 0 1280x720x24 &
+      
+      # Wait for Xvfb to start
+      sleep 3
+      
+      # Run the Streamlit app
+      streamlit run app/main.py --server.port 8501 --server.address 0.0.0.0 --theme.base dark
+
+# Ports to expose
+ports:
+  - port: 8501
+    onOpen: open-preview
+    name: Streamlit App
+    description: TI Video Creator Web Interface
+
+  - port: 5900
+    onOpen: ignore
+    name: VNC Desktop
+    description: Virtual Desktop for GUI apps
+
+  - port: 6080
+    onOpen: open-preview
+    name: noVNC Web Desktop
+    description: Web-based Virtual Desktop
+
+# VS Code extensions to install
+vscode:
+  extensions:
+    - ms-python.python
+    - ms-toolsai.jupyter
+    - ms-azuretools.vscode-docker
+    - redhat.vscode-yaml
+    - github.vscode-pull-request-github
+    - oderwat.indent-rainbow
+    - coenraads.bracket-pair-colorizer-2
+    - pkief.material-icon-theme
+    - ritwickdey.liveserver
+    - wayou.vscode-todo-highlight
+
+# Environment variables
+env:
+  STREAMLIT_SERVER_PORT: "8501"
+  STREAMLIT_SERVER_ADDRESS: "0.0.0.0"
+  PYTHONPATH: "/workspace/TI-video"
+  DISPLAY: ":99"
+  LIBGL_ALWAYS_SOFTWARE: "1"
+  GITPOD_PREVENT_METADATA_ACCESS: "true"
